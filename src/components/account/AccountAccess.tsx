@@ -125,7 +125,7 @@ export function AccountAccess() {
     }
     void (async () => {
       const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.data.session) {
+      if (!sessionData.session) {
         setPhase("entry");
         return;
       }
@@ -149,7 +149,7 @@ export function AccountAccess() {
       setCode("");
       setNoAccountError(null);
       const { data: sessionData } = await supabase.auth.getSession();
-      if (sessionData.data.session) {
+      if (sessionData.session) {
         await continueWithSession();
       } else {
         await signInWithGoogle(); // redirects to Google; ticket stays in sessionStorage
@@ -471,7 +471,7 @@ export function AccountAccess() {
         className="min-h-12 w-full rounded-xl text-[1rem]"
         onClick={() => { setError(null); setPhase("loading"); void (async () => {
           const { data: sessionData } = await supabase.auth.getSession();
-          if (!sessionData.data.session) { setPhase("entry"); return; }
+          if (!sessionData.session) { setPhase("entry"); return; }
           await continueWithSession();
         })(); }}
       >
