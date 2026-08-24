@@ -1,13 +1,13 @@
-import { useCallback, useEffect } from "react";
+import { useEffect } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useAccount } from "@/components/account/AccountProvider";
-import { ClientOnboardingChat } from "@/components/chat/ClientOnboardingChat";
+import { ClientOnboardingScreen } from "@/components/chat/ClientOnboardingScreen";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
     meta: [
       { title: "Onboarding — No More Copium" },
-      { name: "description", content: "Complete local Coach onboarding." },
+      { name: "description", content: "Chat with your coach and wait for approval." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -18,10 +18,6 @@ function OnboardingPage() {
   const navigate = useNavigate();
   const { account, loading } = useAccount();
 
-  const enterClientApp = useCallback(async () => {
-    await navigate({ to: "/client/dashboard", replace: true });
-  }, [navigate]);
-
   useEffect(() => {
     if (loading) return;
     if (!account) {
@@ -30,20 +26,20 @@ function OnboardingPage() {
       void navigate({ to: "/coach/dashboard", replace: true });
     } else if (account.role === "payment_manager") {
       void navigate({ to: "/payment/dashboard", replace: true });
-    } else if (account.onboardingCompletedAt) {
-      void enterClientApp();
+    } else if (account.approvedAt) {
+      void navigate({ to: "/client/dashboard", replace: true });
     }
-  }, [account, enterClientApp, loading, navigate]);
+  }, [account, loading, navigate]);
 
   if (
     loading ||
     !account ||
     account.role === "coach" ||
     account.role === "payment_manager" ||
-    account.onboardingCompletedAt
+    account.approvedAt
   ) {
-    return <main className="min-h-[100dvh] bg-background" aria-label="Opening local account" />;
+    return <main className="min-h-[100dvh] bg-background" aria-label="Opening onboarding" />;
   }
 
-  return <ClientOnboardingChat account={account} onCompleted={enterClientApp} />;
+  return <ClientOnboardingScreen account={account} />;
 }

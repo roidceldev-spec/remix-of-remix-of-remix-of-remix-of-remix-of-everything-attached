@@ -32,7 +32,7 @@ describe("error state final audit", () => {
   });
 
   test("payment settings and pending payments use informative errors with what/why/next", () => {
-    const settings = read("../components/chat/PaymentSettingsForm.tsx");
+    const settings = read("../../onboarding-archive/PaymentSettingsForm.tsx");
     const pending = read("../components/coach/PendingPaymentsSection.tsx");
     const broadcast = read("../components/chat/BroadcastComposer.tsx");
     [settings, pending, broadcast].forEach((content) => {
@@ -48,7 +48,7 @@ describe("error state final audit", () => {
     const files = [
       "../components/account/AccountAccess.tsx",
       "../components/chat/BroadcastComposer.tsx",
-      "../components/chat/PaymentSettingsForm.tsx",
+      "../../onboarding-archive/PaymentSettingsForm.tsx",
       "../components/coach/PendingPaymentsSection.tsx",
       "../components/chat/ChatConversation.tsx",
       "../components/chat/CoachChatInbox.tsx",

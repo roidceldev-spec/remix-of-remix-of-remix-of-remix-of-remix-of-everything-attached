@@ -1,5 +1,5 @@
-import { appendLocalChatMessages, ensureChatThread, fetchCoachAccount } from "./chat";
-import { fetchAccount, updateLocalAccount } from "./cloud-accounts";
+import { appendLocalChatMessages, ensureChatThread, fetchCoachAccount } from "../src/lib/chat";
+import { fetchAccount, updateLocalAccount } from "../src/lib/cloud-accounts";
 
 export const ONBOARDING_FINAL_MESSAGE =
   "Just complete the payment and you'll get instant access to your personalized training program. I can't wait to talk to you and personalize it even more.";

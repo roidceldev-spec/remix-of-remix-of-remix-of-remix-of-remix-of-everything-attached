@@ -25,7 +25,7 @@ describe("loading state - shimmer wave", () => {
 
   test("loading surfaces use skeleton-shimmer not plain text", () => {
     const chatConv = read("../chat/ChatConversation.tsx");
-    const onboarding = read("../chat/ClientOnboardingChat.tsx");
+    const onboarding = read("../../../onboarding-archive/ClientOnboardingChat.tsx");
     const inbox = read("../chat/CoachChatInbox.tsx");
     const history = read("../workout-history/WorkoutHistoryList.tsx");
     const account = read("../account/AccountAccess.tsx");
