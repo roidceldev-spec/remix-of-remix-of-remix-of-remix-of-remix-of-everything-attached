@@ -28,7 +28,7 @@ export function ClientShell() {
 
   useEffect(() => {
     if (loading) return;
-    if (account?.role === "client" && !account.onboardingCompletedAt) {
+    if (account?.role === "client" && !account.approvedAt) {
       void navigate({ to: "/onboarding", replace: true });
     } else if (account?.role !== "client") {
       void navigate({ to: "/access", replace: true });
@@ -36,13 +36,13 @@ export function ClientShell() {
   }, [account, loading, navigate]);
 
   useEffect(() => {
-    if (loading || account?.role !== "client" || !account.onboardingCompletedAt) return;
+    if (loading || account?.role !== "client" || !account.approvedAt) return;
     // Paused workouts from a previous day are finalized into history automatically.
     void finalizeExpiredPausedWorkouts(account.id);
   }, [account, loading]);
 
   useEffect(() => {
-    if (loading || account?.role !== "client" || !account.onboardingCompletedAt) return;
+    if (loading || account?.role !== "client" || !account.approvedAt) return;
     const id = window.setTimeout(async () => {
       try {
         const { preloadClientRoutes, warmStaticCache } = await import("@/lib/route-preloader");
@@ -69,7 +69,7 @@ export function ClientShell() {
     return () => window.clearTimeout(id);
   }, [account, loading, router, pathname]);
 
-  if (loading || account?.role !== "client" || !account.onboardingCompletedAt) {
+  if (loading || account?.role !== "client" || !account.approvedAt) {
     return <div className="min-h-[100dvh] bg-background" />;
   }
 

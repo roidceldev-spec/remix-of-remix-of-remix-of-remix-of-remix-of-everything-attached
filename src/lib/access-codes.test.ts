@@ -303,3 +303,64 @@ describe("B4 client access guards", () => {
     expect(lib).toMatch(/ACCESS_CODE_TICKET_STORAGE_KEY/);
   });
 });
+
+describe("B5 manual onboarding guards", () => {
+  const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), "utf8");
+
+  test("onboarding route uses the live chat screen and gates on approval", () => {
+    const route = read("../routes/onboarding.tsx");
+    expect(route).toMatch(/ClientOnboardingScreen/);
+    expect(route).not.toMatch(/ClientOnboardingChat/);
+    expect(route).toMatch(/account\.approvedAt/);
+  });
+
+  test("onboarding screen = live chat + single server greeting + approval polling", () => {
+    const screen = read("../components/chat/ClientOnboardingScreen.tsx");
+    expect(screen).toMatch(/appendOnboardingGreeting/);
+    expect(screen).toMatch(/Waiting for approval/);
+    expect(screen).toMatch(/ChatConversation clientId=\{account.id\} hideBack/);
+    expect(screen).toMatch(/fetchAccount\(account\.id\)/);
+    expect(screen).toMatch(/navigate\(\{ to: "\/client\/dashboard", replace: true \}\)/);
+    expect(screen).not.toMatch(/CLIENT_ONBOARDING_QUESTIONS/);
+    expect(screen).not.toMatch(/options/);
+  });
+
+  test("chat.ts: free texting before approval + server-side greeting RPC wrapper", () => {
+    const chat = read("../lib/chat.ts");
+    expect(chat).not.toMatch(/Complete onboarding before sending free-form messages/);
+    expect(chat).toMatch(/append_onboarding_greeting/);
+    expect(chat).toMatch(/p_client_id/);
+  });
+
+  test("client shell and access routing use approvedAt (not onboardingCompletedAt)", () => {
+    const shell = read("../components/client/ClientShell.tsx");
+    expect(shell).toMatch(/!account\.approvedAt/);
+    expect(shell).not.toMatch(/onboardingCompletedAt/);
+    const access = read("../components/account/AccountAccess.tsx");
+    expect(access).toMatch(/if \(account\.approvedAt\) return "\/client\/dashboard"/);
+    expect(access).not.toMatch(/onboardingCompletedAt/);
+  });
+
+  test("old scripted onboarding + payment box are archived, not deleted", () => {
+    for (const file of [
+      "client-onboarding.ts",
+      "ClientOnboardingChat.tsx",
+      "PaymentBox.tsx",
+      "PaymentSettingsForm.tsx",
+    ]) {
+      expect(read(`../../onboarding-archive/${file}`).length).toBeGreaterThan(100);
+    }
+    const archived = read("../../onboarding-archive/client-onboarding.ts");
+    expect(archived).toMatch(/CLIENT_ONBOARDING_QUESTIONS/);
+    expect(archived).toMatch(/PAYMENT_DONE_PROMPT/);
+  });
+
+  test("live chat bubble and coach messaging no longer reference the payment box", () => {
+    const bubble = read("../components/chat/ChatMessageBubble.tsx");
+    expect(bubble).not.toMatch(/ONBOARDING_PAYMENT_BOX_BODY/);
+    expect(bubble).not.toMatch(/PaymentBox/);
+    const messaging = read("../components/chat/CoachMessagingPage.tsx");
+    expect(messaging).not.toMatch(/PaymentSettingsForm/);
+    expect(messaging).not.toMatch(/value="payment"/);
+  });
+});

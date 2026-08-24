@@ -24,7 +24,7 @@ describe("onboarding UI overhaul", () => {
   });
 
   test("preserves exact Mirin spelling requirement in onboarding spec docs", () => {
-    const spec = read("../../docs/ONBOARDING_DISCUSSION_SPEC.md");
+    const spec = read("../docs/ONBOARDING_DISCUSSION_SPEC.md");
     expect(spec).toMatch(/Mirin/);
   });
 });

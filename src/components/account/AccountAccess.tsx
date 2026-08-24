@@ -36,7 +36,7 @@ type Phase = "loading" | "entry" | "details" | "coach" | "error";
 
 function enterRouteFor(account: AppAccount): string {
   if (account.role === "coach") return "/coach/dashboard";
-  if (account.onboardingCompletedAt) return "/client/dashboard";
+  if (account.approvedAt) return "/client/dashboard";
   return "/onboarding";
 }
 

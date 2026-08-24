@@ -197,9 +197,6 @@ export async function sendChatMessage({
   }
   const sender = await fetchAccount(senderAccountId);
   if (!sender) throw new Error("Sender account was not found.");
-  if (sender.role === "client" && !sender.onboardingCompletedAt) {
-    throw new Error("Complete onboarding before sending free-form messages.");
-  }
   const threadId = await ensureChatThread(clientId);
   const { error } = await supabase.from("chat_messages").insert({
     id: messageId,
@@ -211,6 +208,19 @@ export async function sendChatMessage({
   await touchThreadLastMessage(threadId, senderAccountId, normalized);
   emitLocalEvent(LOCAL_CHAT_CHANGED_EVENT);
   return messageId;
+}
+
+/**
+ * Seeds the single onboarding greeting server-side (idempotent):
+ *   "Welcome to No More Copium, {name}. How many times a week do you usually
+ *   work out right now, brother?"
+ * Sent as the coach in the client's thread; no-op if already seeded.
+ */
+export async function appendOnboardingGreeting(clientId: string): Promise<void> {
+  const { error } = await supabase.rpc("append_onboarding_greeting", {
+    p_client_id: clientId,
+  });
+  if (error) throw new Error(error.message || "Your welcome message could not be sent.");
 }
 
 export async function sendChatImages(_options: {

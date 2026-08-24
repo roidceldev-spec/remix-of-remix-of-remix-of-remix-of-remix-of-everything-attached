@@ -6,9 +6,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import type { ChatMessage } from "@/lib/chat";
-import { ONBOARDING_PAYMENT_BOX_BODY } from "@/lib/client-onboarding";
 import { decodeFinalSequenceMessage, type FinalSequenceLine } from "@/lib/final-sequence";
-import { PaymentBox } from "@/components/payment/PaymentBox";
 import { cn } from "@/lib/utils";
 
 export function ChatMessageBubble({ message, own }: { message: ChatMessage; own: boolean }) {
@@ -22,11 +20,7 @@ export function ChatMessageBubble({ message, own }: { message: ChatMessage; own:
             : "rounded-bl-sm bg-muted text-foreground",
         )}
       >
-        {message.body === ONBOARDING_PAYMENT_BOX_BODY ? (
-          <PaymentBox />
-        ) : (
-          message.body && <ChatMessageBody body={message.body} interactive={!own} />
-        )}
+        {message.body && <ChatMessageBody body={message.body} interactive={!own} />}
         {message.attachments && message.attachments.length > 0 && (
           <div
             className={cn(

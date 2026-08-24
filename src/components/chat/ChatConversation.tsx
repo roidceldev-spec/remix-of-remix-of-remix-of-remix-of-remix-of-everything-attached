@@ -26,7 +26,13 @@ import { ChatImageUploadDialog } from "./ChatImageUploadDialog";
 import { ChatMessageBubble } from "./ChatMessageBubble";
 import { useChat } from "./ChatProvider";
 
-export function ChatConversation({ clientId }: { clientId: string }) {
+export function ChatConversation({
+  clientId,
+  hideBack = false,
+}: {
+  clientId: string;
+  hideBack?: boolean;
+}) {
   const { account } = useAccount();
   const { refreshUnread } = useChat();
   const [peer, setPeer] = useState<AppAccount | null>(null);
@@ -179,14 +185,16 @@ export function ChatConversation({ clientId }: { clientId: string }) {
   return (
     <section className="flex min-h-[calc(100dvh-11rem)] flex-col">
       <div className="flex items-center gap-3 border-b border-border pb-3">
-        <Button asChild variant="ghost" size="icon" className="min-h-11 min-w-11 shrink-0 rounded-xl">
-          <Link
-            to={backTo}
-            aria-label={account.role === "coach" ? "Back to chats" : "Back to Dashboard"}
-          >
-            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-          </Link>
-        </Button>
+        {!hideBack && (
+          <Button asChild variant="ghost" size="icon" className="min-h-11 min-w-11 shrink-0 rounded-xl">
+            <Link
+              to={backTo}
+              aria-label={account.role === "coach" ? "Back to chats" : "Back to Dashboard"}
+            >
+              <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+            </Link>
+          </Button>
+        )}
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-[1.125rem] font-semibold leading-tight tracking-[-0.01em] text-foreground">
             {peer?.name ?? (account.role === "coach" ? "Client" : "Coach")}
