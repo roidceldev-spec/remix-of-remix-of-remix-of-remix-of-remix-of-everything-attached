@@ -253,3 +253,53 @@ describe("B3 coach UI guards", () => {
     expect(conversation).toMatch(/Assign a training program on the client page/);
   });
 });
+
+describe("B4 client access guards", () => {
+  const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), "utf8");
+
+  test("AccountAccess offers Create account (code), Login (Google), and Coach password", () => {
+    const access = read("../components/account/AccountAccess.tsx");
+    expect(access).toMatch(/Create account/);
+    expect(access).toMatch(/GoogleSignInButton/);
+    expect(access).toMatch(/Coach\? Sign in with your account password/);
+    expect(access).toMatch(/redeemAccessCode/);
+    expect(access).toMatch(/No account has been created with this Google account/);
+    expect(access).toMatch(/NoAccountError/);
+    expect(access).toMatch(/storeAccessTicket/);
+    expect(access).toMatch(/readAccessTicket/);
+    expect(access).not.toMatch(/Coach Mode/);
+    expect(access).not.toMatch(/Create a new local account/);
+  });
+
+  test("AccountProvider wires the code-ticket flow, coach password, and /access redirect", () => {
+    const provider = read("../components/account/AccountProvider.tsx");
+    expect(provider).toMatch(/completeAccessCodeAccount/);
+    expect(provider).toMatch(/loginCoach/);
+    expect(provider).toMatch(/window.location.origin\}\/access/);
+    expect(provider).toMatch(/NoAccountError/);
+    expect(provider).not.toMatch(/completeNewAccount/);
+  });
+
+  test("Google sign-in returns to /access (not the root)", () => {
+    const button = read("../components/account/GoogleSignInButton.tsx");
+    expect(button).toMatch(/\/access/);
+    expect(button).toMatch(/Continue with Google/);
+    expect(button).toMatch(/signInWithOAuth/);
+  });
+
+  test("cloud-accounts distinguishes no_account for the create-account flow", () => {
+    const accounts = read("../lib/cloud-accounts.ts");
+    expect(accounts).toMatch(/class NoAccountError/);
+    expect(accounts).toMatch(/code === "no_account"/);
+    expect(accounts).toMatch(/No account has been created with this Google account/);
+  });
+
+  test("one-time ticket helpers only keep an unexpired ticket", () => {
+    const lib = read("../lib/access-codes.ts");
+    expect(lib).toMatch(/storeAccessTicket/);
+    expect(lib).toMatch(/readAccessTicket/);
+    expect(lib).toMatch(/clearAccessTicket/);
+    expect(lib).toMatch(/sessionStorage/);
+    expect(lib).toMatch(/ACCESS_CODE_TICKET_STORAGE_KEY/);
+  });
+});

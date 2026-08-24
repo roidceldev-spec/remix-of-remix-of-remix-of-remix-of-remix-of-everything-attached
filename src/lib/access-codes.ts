@@ -206,6 +206,52 @@ export async function loginCoach(password: string): Promise<{
   return data as { session: { access_token: string; refresh_token: string }; account: AppAccount };
 }
 
+/**
+ * One-time sign-up ticket storage (sessionStorage — dies with the tab).
+ * The ticket survives the Google OAuth detour so the client can finish
+ * account creation after the code was already burned.
+ */
+
+type StoredAccessTicket = { ticket: string; expiresAt: number };
+
+export function storeAccessTicket(ticket: string, expiresInSeconds: number): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(
+      ACCESS_CODE_TICKET_STORAGE_KEY,
+      JSON.stringify({ ticket, expiresAt: Date.now() + expiresInSeconds * 1000 }),
+    );
+  } catch {
+    // sessionStorage unavailable — account creation will fail with a clear error
+  }
+}
+
+/** Returns the ticket if present and unexpired (and removes it if expired). */
+export function readAccessTicket(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(ACCESS_CODE_TICKET_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as StoredAccessTicket;
+    if (typeof parsed?.ticket !== "string" || Date.now() > parsed.expiresAt) {
+      sessionStorage.removeItem(ACCESS_CODE_TICKET_STORAGE_KEY);
+      return null;
+    }
+    return parsed.ticket;
+  } catch {
+    return null;
+  }
+}
+
+export function clearAccessTicket(): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(ACCESS_CODE_TICKET_STORAGE_KEY);
+  } catch {
+    // ignore
+  }
+}
+
 /** Coach: publish the client's program snapshot from the library (B1 RPC). */
 export async function publishClientProgram(clientId: string): Promise<void> {
   const { error } = await supabase.rpc("publish_client_program", { p_client_id: clientId });

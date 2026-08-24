@@ -104,32 +104,51 @@ export async function fetchPublicCoachAccount(): Promise<AppAccount | null> {
 }
 
 /**
- * Calls the account-bootstrap edge function with the current Google session.
- * - Existing account → returned as-is.
- * - Coach email (COACH_GOOGLE_EMAIL secret) → Coach account created.
- * - New client → requires name + username.
+ * Thrown when the signed-in identity has no app_accounts row yet.
+ * The UI shows "No account has been created with this Google account" and
+ * offers the access-code creation flow.
  */
-export async function bootstrapAccount(input?: {
-  name?: string;
-  username?: string;
-}): Promise<AppAccount> {
+export class NoAccountError extends Error {
+  readonly code = "no_account";
+  constructor(
+    message = "No account has been created with this Google account. Create an account first.",
+  ) {
+    super(message);
+    this.name = "NoAccountError";
+  }
+}
+
+/**
+ * Loads the app account linked to the current session via the
+ * account-bootstrap edge function (session lookup only — account creation
+ * happens in create-client-account / coach-login).
+ * Throws NoAccountError when the identity has no account yet.
+ */
+export async function bootstrapAccount(): Promise<AppAccount> {
   const { data: sessionData } = await supabase.auth.getSession();
   if (!sessionData.session) {
-    throw new Error("Sign in with Google first.");
+    throw new Error("Sign in first.");
   }
   const { data, error } = await supabase.functions.invoke("account-bootstrap", {
-    body: { name: input?.name, username: input?.username },
+    body: {},
   });
   if (error) {
+    const context = (error.context ?? {}) as { code?: string; error?: string; message?: string };
+    if (context.code === "no_account") {
+      throw new NoAccountError(context.error ?? context.message);
+    }
     const message =
-      (error.context as { message?: string } | undefined)?.message ?? error.message;
-    throw new Error(message || "Account could not be created.");
+      context.error ??
+      context.message ??
+      "Account could not be loaded. What happened: bootstrap failed. Why: the session may be incomplete. What to do: sign out and sign in again.";
+    throw new Error(message);
   }
   if (!data?.ok || !data?.account?.id) {
+    if (data?.code === "no_account") throw new NoAccountError();
     const message =
       typeof data?.error === "string"
         ? data.error
-        : "Account could not be created. What happened: bootstrap failed. Why: the Google session may be incomplete. What to do: sign out and sign in again.";
+        : "Account could not be loaded. What happened: bootstrap failed. Why: the session may be incomplete. What to do: sign out and sign in again.";
     throw new Error(message);
   }
   // Bootstrap returns the row without onboarding fields — fetch the full row.
