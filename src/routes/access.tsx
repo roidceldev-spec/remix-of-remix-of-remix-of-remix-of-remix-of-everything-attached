@@ -5,7 +5,10 @@ export const Route = createFileRoute("/access")({
   head: () => ({
     meta: [
       { title: "Sign in — No More Copium" },
-      { name: "description", content: "Sign in to No More Copium." },
+      {
+        name: "description",
+        content: "Create an account with your access code or sign in to No More Copium.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -18,7 +21,7 @@ function AccessPage() {
       <div className="w-full max-w-sm text-center">
         <h1 className="text-3xl font-semibold tracking-tight">No More Copium</h1>
         <p className="mt-3 text-[1rem] leading-6 text-muted-foreground">
-          Sign in to get your personalized training program.
+          Create an account with your access code, or sign in with Google.
         </p>
         <div className="mt-8">
           <AccountAccess />
