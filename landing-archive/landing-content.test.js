@@ -4,7 +4,7 @@ import { LANDING_TESTIMONIALS } from "./landing-content";
 
 const EXPECTED_TESTIMONIALS = [
   {
-    quote: "Dethnic saved my life",
+    quote: "Hal saved my life",
     name: "Tushar",
   },
   {

@@ -27,7 +27,7 @@ Deno.serve(async (request) => {
     const secretKey = getSecretKey();
     const anonKey = Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY");
     const coachPasswordHash = Deno.env.get("COACH_ACCESS_HASH");
-    const coachDisplayName = Deno.env.get("COACH_DISPLAY_NAME") ?? "Dethnic";
+    const coachDisplayName = Deno.env.get("COACH_DISPLAY_NAME") ?? "Hal";
     if (!url || !secretKey || !anonKey) throw new HttpError("Cloud credentials are unavailable.", 503);
     if (!coachPasswordHash) throw new HttpError("Coach login is not configured.", 503);
 

@@ -30,7 +30,7 @@ User went through app live on Lovable deploy URL and reported:
 
 - Each new intro page:
   - Shows **only one testimonial** from the approved list:
-    1. “Dethnic saved my life” — Tushar
+    1. “Hal saved my life” — Tushar
     2. “Holy shit I haven’t trained in 2 weeks and my wrists are still 18 cm when I measured. It's not just swelling.” — Garret
     3. “5' 5 - 5' 10 with No More Copium 1-1 coaching. Every dollar was worth it” — Dylan
   - **Bigger font** than current proof stack because only one piece of text on screen. Should still respect 1rem minimum but can use clamp for huge impact, e.g. `clamp(1.5rem, 6vw, 3rem)` or similar.

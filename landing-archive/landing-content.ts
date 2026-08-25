@@ -1,6 +1,6 @@
 export const LANDING_TESTIMONIALS = [
   {
-    quote: "Dethnic saved my life",
+    quote: "Hal saved my life",
     name: "Tushar",
   },
   {

@@ -21,7 +21,7 @@ The text size used by `JFL, look at this.` establishes the minimum readable size
 
 The previous white hero image placeholder is removed. The top of the section displays all three approved testimonials in a compact static proof stack:
 
-1. `“Dethnic saved my life” — Tushar`
+1. `“Hal saved my life” — Tushar`
 2. `“Holy shit I haven’t trained in 2 weeks and my wrists are still 18 cm when I measured. It's not just swelling.” — Garret`
 3. `“5' 5 - 5' 10 with No More Copium 1-1 coaching. Every dollar was worth it” — Dylan`
 
@@ -101,7 +101,7 @@ Replace bullet points with six compact long cards. Every card contains:
 1. **No AIslop**
    - `AI` inside a circle with a diagonal prohibition slash.
 
-2. **1-1 Access to Dethnic**
+2. **1-1 Access to Hal**
    - Minimal chat bubble with message lines.
 
 The local `Continue` button appears immediately after card 2. It continues to `/access`; it must not imply Google authentication while the app is a local-only prototype.
