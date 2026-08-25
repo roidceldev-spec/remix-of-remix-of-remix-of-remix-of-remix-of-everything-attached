@@ -364,3 +364,42 @@ describe("B5 manual onboarding guards", () => {
     expect(messaging).not.toMatch(/value="payment"/);
   });
 });
+
+describe("B6 data isolation guards", () => {
+  const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), "utf8");
+
+  test("data-isolation migration locks app_state + program-covers to coach only", () => {
+    const migration = read("../../supabase/migrations/20260826000000_data_isolation.sql");
+    expect(migration).toMatch(/DROP POLICY IF EXISTS "Authenticated users can read app state"/);
+    expect(migration).toMatch(/CREATE POLICY "Coach can read app state"/);
+    expect(migration).toMatch(/USING \(public\.is_app_coach\(\)\)/);
+    expect(migration).toMatch(/DROP POLICY IF EXISTS "Authenticated users can read program covers"/);
+    expect(migration).toMatch(/CREATE POLICY "Coach can read program covers"/);
+    expect(migration).not.toMatch(/auth\.uid\(\) IS NOT NULL\b/);
+  });
+
+  test("cloud cache hydrates clients from their own bundle first (isolation)", () => {
+    const cache = read("../lib/cloud-cache.ts");
+    expect(cache).toMatch(/get_client_program_bundle/);
+    expect(cache).toMatch(/programs: \[bundle\.program\]/);
+    expect(cache).toMatch(/bundle\.workouts/);
+    expect(cache).toMatch(/bundle\.exercises/);
+    expect(cache).toMatch(/bundle\.weight_units/);
+    expect(cache).toMatch(/hydratePromise = null/); // re-fetch after approval
+    expect(cache).not.toMatch(/from\("app_state"\)[\s\S]*maybeSingle\(\)[\s\S]*get_client_program_bundle/);
+  });
+
+  test("approval path re-hydrates the fresh bundle before entering the app", () => {
+    const screen = read("../components/chat/ClientOnboardingScreen.tsx");
+    expect(screen).toMatch(/invalidateCloudCache\(\)/);
+    expect(screen).toMatch(/hydrateCloudCache\(\)/);
+    expect(screen).toMatch(/navigate\(\{ to: "\/client\/dashboard", replace: true \}\)/);
+  });
+
+  test("client management can re-publish a client's program snapshot", () => {
+    const page = read("../components/coach/ClientManagement.tsx");
+    expect(page).toMatch(/Refresh client program/);
+    expect(page).toMatch(/publishClientProgram/);
+    expect(page).toMatch(/refreshProgram/);
+  });
+});

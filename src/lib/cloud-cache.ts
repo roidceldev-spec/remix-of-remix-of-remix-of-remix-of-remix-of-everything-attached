@@ -45,6 +45,29 @@ export async function hydrateCloudCache(): Promise<boolean> {
   if (hydratePromise) return hydratePromise;
   hydratePromise = (async () => {
     try {
+      // DATA ISOLATION: clients read ONLY their own published program snapshot
+      // (coach-published at approval; the RPC returns NULL for coaches, for
+      // unapproved clients, or before a bundle exists). The global app_state
+      // row is coach-only via RLS. Cache shape stays the same as the old
+      // library shape so every existing reader keeps working:
+      //   programs: [<the client's single program>]
+      const { data: bundle, error: bundleError } = await supabase.rpc(
+        "get_client_program_bundle",
+      );
+      if (!bundleError && bundle && bundle.program) {
+        cache = {
+          programs: [bundle.program],
+          workouts: Array.isArray(bundle.workouts) ? bundle.workouts : [],
+          exercises: Array.isArray(bundle.exercises) ? bundle.exercises : [],
+          weightUnits: Array.isArray(bundle.weight_units) ? bundle.weight_units : [],
+        };
+        hydrated = true;
+        emitLocalEvent(CLOUD_STATE_HYDRATED_EVENT);
+        return true;
+      }
+
+      // Coach (or any account without a bundle): read the library row. RLS
+      // returns an empty result for non-coaches, so no error path.
       const { data, error } = await supabase
         .from("app_state")
         .select("programs, exercises, workouts, weight_units")
@@ -68,6 +91,10 @@ export async function hydrateCloudCache(): Promise<boolean> {
     } catch (error) {
       console.error("Cloud state hydrate failed", error);
       return false;
+    } finally {
+      // Allow the next call to re-fetch (e.g. after the coach approves a
+      // client, the newly published bundle must be picked up).
+      hydratePromise = null;
     }
   })();
   return hydratePromise;

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, BadgeCheck, KeyRound } from "lucide-react";
+import { ArrowLeft, BadgeCheck, KeyRound, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -10,7 +10,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { WorkoutHistoryList } from "@/components/workout-history/WorkoutHistoryList";
-import { approveClientWithProgram, createAccessCode } from "@/lib/access-codes";
+import {
+  approveClientWithProgram,
+  createAccessCode,
+  publishClientProgram,
+} from "@/lib/access-codes";
 import { type AppAccount, fetchAccount, updateCloudClientAssignment } from "@/lib/cloud-accounts";
 import { type ProgramSummary, loadPrograms } from "@/lib/coach-programs";
 import { CodeRevealDialog } from "./CodeRevealDialog";
@@ -23,6 +27,7 @@ export function ClientManagement({ clientId }: { clientId: string }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [approving, setApproving] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [approveMessage, setApproveMessage] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [revealed, setRevealed] = useState<{ code: string; note: string } | null>(null);
@@ -101,6 +106,27 @@ export function ClientManagement({ clientId }: { clientId: string }) {
       );
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const refreshProgram = async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    setApproveMessage(null);
+    setError(null);
+    try {
+      await publishClientProgram(client.id);
+      setApproveMessage(
+        `${client.name}'s program snapshot is up to date.`,
+      );
+    } catch (nextError) {
+      setError(
+        nextError instanceof Error
+          ? nextError.message
+          : "The program snapshot could not be refreshed.",
+      );
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -255,6 +281,17 @@ export function ClientManagement({ clientId }: { clientId: string }) {
                 {approving ? "Approving…" : "Approve client"}
               </Button>
             )}
+            <Button
+              type="button"
+              variant="outline"
+              disabled={refreshing || !client.assignedProgramId}
+              onClick={() => void refreshProgram()}
+              className="min-h-11 rounded-xl text-[1rem] font-semibold"
+              title="Re-publish this client's program snapshot after you edit the library"
+            >
+              <RefreshCw className="mr-2 h-5 w-5" aria-hidden="true" />
+              {refreshing ? "Refreshing…" : "Refresh client program"}
+            </Button>
           </div>
 
           {!client.approvedAt && !client.assignedProgramId && (
