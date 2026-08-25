@@ -54,7 +54,7 @@ export function GoogleSignInButton({
         ) : (
           <GoogleIcon />
         )}
-        {signingIn ? "Opening Google…" : "Continue with Google"}
+        {signingIn ? "Opening Google…" : "Log in with Google"}
       </button>
       {error && (
         <div
