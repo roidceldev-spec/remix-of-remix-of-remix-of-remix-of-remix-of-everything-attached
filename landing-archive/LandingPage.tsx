@@ -234,7 +234,7 @@ const VALUE_ITEMS = [
   },
   {
     icon: "chat",
-    lead: "1-1 Access to Dethnic",
+    lead: "1-1 Access to Hal",
     body: "I'll even modify your training program as you go. I'll even personally support you as you go.",
   },
   {

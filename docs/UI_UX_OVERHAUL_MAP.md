@@ -58,7 +58,7 @@ Each patch focuses on one stage. A stage may be split into smaller patches when 
 
 Replace the planned hero image placeholder with these three testimonials, preserving order and wording:
 
-> “Dethnic saved my life”
+> “Hal saved my life”
 >
 > — Tushar
 
