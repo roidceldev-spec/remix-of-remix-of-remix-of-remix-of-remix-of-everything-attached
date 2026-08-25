@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { emitLocalEvent } from "./local-events";
+import { supabaseLoose } from "./supabase-loose-client";
 
 export type PaymentSettings = {
   cardUrl: string;
@@ -35,7 +36,7 @@ export function loadPaymentSettings(): PaymentSettings {
 
 export async function hydratePaymentSettings(): Promise<void> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseLoose
       .from("payment_settings")
       .select("card_url, paypal_url")
       .eq("id", 1)
@@ -65,7 +66,7 @@ export function savePaymentSettings(settings: PaymentSettings): PaymentSettings 
   cached = normalized;
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
   emitLocalEvent(LOCAL_PAYMENT_SETTINGS_CHANGED_EVENT);
-  void supabase
+  void supabaseLoose
     .rpc("upsert_payment_settings", {
       p_card_url: normalized.cardUrl,
       p_paypal_url: normalized.paypalUrl,

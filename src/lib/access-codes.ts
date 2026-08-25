@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { type AppAccount } from "./cloud-accounts";
+import { supabaseLoose } from "./supabase-loose-client";
 
 /**
  * One-time access codes (voucher flow).
@@ -254,13 +255,13 @@ export function clearAccessTicket(): void {
 
 /** Coach: publish the client's program snapshot from the library (B1 RPC). */
 export async function publishClientProgram(clientId: string): Promise<void> {
-  const { error } = await supabase.rpc("publish_client_program", { p_client_id: clientId });
+  const { error } = await supabaseLoose.rpc("publish_client_program", { p_client_id: clientId });
   if (error) throw new Error(error.message || "The program snapshot could not be published.");
 }
 
 /** Coach: approve a client (requires a program assignment) — unlocks full access (B1 RPC). */
 export async function approveClient(clientId: string): Promise<void> {
-  const { error } = await supabase.rpc("approve_client", { p_client_id: clientId });
+  const { error } = await supabaseLoose.rpc("approve_client", { p_client_id: clientId });
   if (error) throw new Error(error.message || "The client could not be approved.");
 }
 

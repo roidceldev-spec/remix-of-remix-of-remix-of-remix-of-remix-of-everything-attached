@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { supabaseLoose } from "./supabase-loose-client";
 
 export type AccountRole = "coach" | "client" | "payment_manager";
 
@@ -64,7 +65,7 @@ function mapRow(row: Record<string, unknown>): AppAccount {
 
 /** Full account row for the current session (after bootstrap). */
 export async function fetchAccount(accountId: string): Promise<AppAccount | null> {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseLoose
     .from("app_accounts")
     .select(
       "id, name, username, role, is_preview, onboarding_step, onboarding_completed_at, approved_at, assigned_program_id, created_at",
@@ -78,7 +79,7 @@ export async function fetchAccount(accountId: string): Promise<AppAccount | null
 export async function fetchAccounts(): Promise<AppAccount[]> {
   const { data: sessionData } = await supabase.auth.getSession();
   if (!sessionData.session) return [];
-  const { data: rows, error } = await supabase
+  const { data: rows, error } = await supabaseLoose
     .from("app_accounts")
     .select(
       "id, name, username, role, is_preview, onboarding_step, onboarding_completed_at, approved_at, assigned_program_id, created_at",
@@ -90,7 +91,7 @@ export async function fetchAccounts(): Promise<AppAccount[]> {
 }
 
 export async function fetchPublicCoachAccount(): Promise<AppAccount | null> {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseLoose
     .from("app_accounts")
     .select(
       "id, name, username, role, is_preview, onboarding_step, onboarding_completed_at, approved_at, assigned_program_id, created_at",
@@ -196,7 +197,7 @@ export async function updateLocalAccount(
   if (updates.assignedProgramId !== undefined) {
     payload.assigned_program_id = updates.assignedProgramId;
   }
-  const { data, error } = await supabase
+  const { data, error } = await supabaseLoose
     .from("app_accounts")
     .update(payload)
     .eq("id", accountId)

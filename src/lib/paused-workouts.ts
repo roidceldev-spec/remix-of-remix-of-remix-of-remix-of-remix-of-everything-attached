@@ -5,6 +5,7 @@ import { loadExercises } from "./coach-exercises";
 import { getAllWeightUnits, loadCustomWeightUnits } from "./coach-weight-units";
 import { resultKey, type SessionResultsMap } from "./coach-workout-preview";
 import { emitLocalEvent } from "./local-events";
+import { supabaseLoose } from "./supabase-loose-client";
 import { saveWorkoutSession } from "./workout-history";
 
 export type PausedWorkoutSession = {
@@ -79,12 +80,12 @@ export function hasWorkingProgressInResults(
 
 export async function savePausedWorkout(session: PausedWorkoutSession): Promise<void> {
   // One paused session per workout — remove any previous one first.
-  await supabase
+  await supabaseLoose
     .from("paused_workouts")
     .delete()
     .eq("client_id", session.clientId)
     .eq("workout_id", session.workoutId);
-  const { error } = await supabase.from("paused_workouts").insert({
+  const { error } = await supabaseLoose.from("paused_workouts").insert({
     id: session.id,
     client_id: session.clientId,
     program_id: session.programId ?? null,
@@ -100,7 +101,7 @@ export async function savePausedWorkout(session: PausedWorkoutSession): Promise<
 }
 
 export async function fetchPausedWorkouts(clientId: string): Promise<PausedWorkoutSession[]> {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseLoose
     .from("paused_workouts")
     .select(
       "id, client_id, program_id, workout_id, workout_name, paused_at, elapsed_seconds, results, has_working_progress",
@@ -111,14 +112,14 @@ export async function fetchPausedWorkouts(clientId: string): Promise<PausedWorko
     console.error("Paused workouts could not be loaded", error);
     return [];
   }
-  return (data ?? []).map((row) => mapRow(row as CloudPausedRow));
+  return (data ?? []).map((row) => mapRow(row as unknown as CloudPausedRow));
 }
 
 export async function fetchPausedWorkout(
   clientId: string,
   workoutId: string,
 ): Promise<PausedWorkoutSession | null> {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseLoose
     .from("paused_workouts")
     .select(
       "id, client_id, program_id, workout_id, workout_name, paused_at, elapsed_seconds, results, has_working_progress",
@@ -127,11 +128,11 @@ export async function fetchPausedWorkout(
     .eq("workout_id", workoutId)
     .maybeSingle();
   if (error || !data) return null;
-  return mapRow(data as CloudPausedRow);
+  return mapRow(data as unknown as CloudPausedRow);
 }
 
 export async function clearPausedWorkout(clientId: string, workoutId: string): Promise<void> {
-  await supabase
+  await supabaseLoose
     .from("paused_workouts")
     .delete()
     .eq("client_id", clientId)
@@ -140,7 +141,7 @@ export async function clearPausedWorkout(clientId: string, workoutId: string): P
 }
 
 export function clearAllPausedWorkouts(clientId: string): void {
-  void supabase
+  void supabaseLoose
     .from("paused_workouts")
     .delete()
     .eq("client_id", clientId)
@@ -196,7 +197,7 @@ export async function finalizeExpiredPausedWorkouts(clientId: string): Promise<n
   }
 
   const ids = expired.map((session) => session.id);
-  await supabase.from("paused_workouts").delete().in("id", ids).eq("client_id", clientId);
+  await supabaseLoose.from("paused_workouts").delete().in("id", ids).eq("client_id", clientId);
   emitLocalEvent(LOCAL_PAUSED_WORKOUTS_CHANGED_EVENT);
   return logged;
 }
