@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { supabaseLoose } from "./supabase-loose-client";
 
 export type PaymentTag = "new_user" | "membership";
 
@@ -124,7 +125,7 @@ export function formatUsd(value: number): string {
 }
 
 export async function fetchPayments(): Promise<PaymentRecord[]> {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseLoose
     .from("payments")
     .select(
       "id, client_id, client_username, client_name, amount_usd, tag, note, recorded_by, recorded_at",
@@ -134,11 +135,11 @@ export async function fetchPayments(): Promise<PaymentRecord[]> {
     console.error("Payments could not be loaded", error);
     return [];
   }
-  return (data ?? []).map((row) => mapPayment(row as CloudPaymentRow));
+  return (data ?? []).map((row) => mapPayment(row as unknown as CloudPaymentRow));
 }
 
 export async function fetchPayouts(): Promise<PayoutRecord[]> {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseLoose
     .from("payouts")
     .select(
       "id, amount_usd, screenshot_id, note, status, submitted_by, submitted_at, decided_at, decided_by_coach_id, rejection_reason",
@@ -148,7 +149,7 @@ export async function fetchPayouts(): Promise<PayoutRecord[]> {
     console.error("Payouts could not be loaded", error);
     return [];
   }
-  return (data ?? []).map((row) => mapPayout(row as CloudPayoutRow));
+  return (data ?? []).map((row) => mapPayout(row as unknown as CloudPayoutRow));
 }
 
 export async function recordPayment({
@@ -163,7 +164,7 @@ export async function recordPayment({
   recordedBy: string;
 }): Promise<PaymentRecord> {
   const amount = Number.isFinite(amountUsd) && amountUsd > 0 ? amountUsd : PAYMENT_AMOUNT_USD;
-  const { data, error } = await supabase.rpc("record_payment_and_unlock", {
+  const { data, error } = await supabaseLoose.rpc("record_payment_and_unlock", {
     p_client_username: clientUsername,
     p_amount_usd: amount,
     p_note: note ?? "",
@@ -176,7 +177,7 @@ export async function recordPayment({
     throw new Error(message);
   }
   const paymentId = String(data);
-  const { data: row } = await supabase
+  const { data: row } = await supabaseLoose
     .from("payments")
     .select(
       "id, client_id, client_username, client_name, amount_usd, tag, note, recorded_by, recorded_at",
@@ -185,7 +186,7 @@ export async function recordPayment({
     .maybeSingle();
   if (!row) throw new Error("Payment was recorded but could not be loaded.");
   emitPaymentsChanged();
-  return mapPayment(row as CloudPaymentRow);
+  return mapPayment(row as unknown as CloudPaymentRow);
 }
 
 export async function recordPaymentStarted({
@@ -195,7 +196,7 @@ export async function recordPaymentStarted({
   clientId: string;
   method: "card" | "paypal";
 }): Promise<PaymentStartedRecord> {
-  const { data, error } = await supabase.rpc("record_payment_started", {
+  const { data, error } = await supabaseLoose.rpc("record_payment_started", {
     p_client_id: clientId,
     p_method: method,
   });
@@ -203,7 +204,7 @@ export async function recordPaymentStarted({
     throw new Error("The payment start could not be recorded.");
   }
   void data;
-  const { data: row } = await supabase
+  const { data: row } = await supabaseLoose
     .from("payment_started")
     .select("id, client_id, client_username, client_name, method, started_at")
     .eq("client_id", clientId)
@@ -211,11 +212,11 @@ export async function recordPaymentStarted({
     .limit(1)
     .maybeSingle();
   if (!row) throw new Error("Payment start was recorded but could not be loaded.");
-  return mapStarted(row as CloudStartedRow);
+  return mapStarted(row as unknown as CloudStartedRow);
 }
 
 export async function fetchPaymentStartedRecords(): Promise<PaymentStartedRecord[]> {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseLoose
     .from("payment_started")
     .select("id, client_id, client_username, client_name, method, started_at")
     .order("started_at", { ascending: false });
@@ -223,11 +224,11 @@ export async function fetchPaymentStartedRecords(): Promise<PaymentStartedRecord
     console.error("Payment started records could not be loaded", error);
     return [];
   }
-  return (data ?? []).map((row) => mapStarted(row as CloudStartedRow));
+  return (data ?? []).map((row) => mapStarted(row as unknown as CloudStartedRow));
 }
 
 export function clearPaymentStartedForClient(clientId: string): void {
-  void supabase.from("payment_started").delete().eq("client_id", clientId);
+  void supabaseLoose.from("payment_started").delete().eq("client_id", clientId);
 }
 
 export function submitPayout({
@@ -250,7 +251,7 @@ export function submitPayout({
     );
   }
   return (async () => {
-    const { data, error } = await supabase.rpc("submit_payout", {
+    const { data, error } = await supabaseLoose.rpc("submit_payout", {
       p_amount_usd: amount,
       p_screenshot_id: screenshotId ?? "",
       p_note: note ?? "",
@@ -258,7 +259,7 @@ export function submitPayout({
     });
     if (error) throw new Error("The payout could not be submitted.");
     const payoutId = String(data);
-    const { data: row } = await supabase
+    const { data: row } = await supabaseLoose
       .from("payouts")
       .select(
         "id, amount_usd, screenshot_id, note, status, submitted_by, submitted_at, decided_at, decided_by_coach_id, rejection_reason",
@@ -267,7 +268,7 @@ export function submitPayout({
       .maybeSingle();
     if (!row) throw new Error("Payout was submitted but could not be loaded.");
     emitPayoutsChanged();
-    return mapPayout(row as CloudPayoutRow);
+    return mapPayout(row as unknown as CloudPayoutRow);
   })();
 }
 
@@ -277,7 +278,7 @@ export async function decidePayout(
   coachId: string,
   reason?: string,
 ): Promise<void> {
-  const { error } = await supabase.rpc("decide_payout", {
+  const { error } = await supabaseLoose.rpc("decide_payout", {
     p_payout_id: payoutId,
     p_decision: decision,
     p_coach_id: coachId,

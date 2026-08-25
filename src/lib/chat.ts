@@ -8,6 +8,7 @@ import {
 import { decodeFinalSequenceMessage } from "./final-sequence";
 import { emitLocalEvent, LOCAL_CHAT_CHANGED_EVENT } from "./local-events";
 import type { ProcessedProgressPicture } from "./progress-picture-processing";
+import { supabaseLoose } from "./supabase-loose-client";
 
 export const MAX_CHAT_MESSAGE_LENGTH = 2000;
 
@@ -64,14 +65,18 @@ function mapMessage(row: CloudChatRow): ChatMessage {
 }
 
 export async function fetchChatUnreadSummary(accountId: string): Promise<ChatUnreadSummary> {
-  const { data, error } = await supabase.rpc("unread_counts", {
+  const { data, error } = await supabaseLoose.rpc("unread_counts", {
     p_account_id: accountId,
   });
   if (error) {
     console.error("Unread summary failed", error);
     return { unreadMessages: 0, unreadClientCount: 0, byClientId: {} };
   }
-  const rows = (data ?? []) as Array<{ thread_id: string; client_id: string; unread: number }>;
+  const rows = (data ?? []) as unknown as Array<{
+    thread_id: string;
+    client_id: string;
+    unread: number;
+  }>;
   const byClientId: Record<string, number> = {};
   for (const row of rows) {
     byClientId[row.client_id] = (byClientId[row.client_id] ?? 0) + Number(row.unread ?? 0);
@@ -217,7 +222,7 @@ export async function sendChatMessage({
  * Sent as the coach in the client's thread; no-op if already seeded.
  */
 export async function appendOnboardingGreeting(clientId: string): Promise<void> {
-  const { error } = await supabase.rpc("append_onboarding_greeting", {
+  const { error } = await supabaseLoose.rpc("append_onboarding_greeting", {
     p_client_id: clientId,
   });
   if (error) throw new Error(error.message || "Your welcome message could not be sent.");
@@ -252,7 +257,7 @@ export async function appendLocalChatMessages(messages: ChatMessage[]): Promise<
     body: message.body,
     created_at: message.createdAt,
   }));
-  const { error } = await supabase.rpc("append_onboarding_messages", {
+  const { error } = await supabaseLoose.rpc("append_onboarding_messages", {
     p_client: clientId,
     p_messages: payload,
   });

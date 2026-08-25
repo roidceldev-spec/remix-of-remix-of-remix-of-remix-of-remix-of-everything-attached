@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { emitLocalEvent } from "./local-events";
+import { supabaseLoose } from "./supabase-loose-client";
 
 /**
  * Cloud cache for coach-authored app state and payment settings.
@@ -51,9 +52,17 @@ export async function hydrateCloudCache(): Promise<boolean> {
       // row is coach-only via RLS. Cache shape stays the same as the old
       // library shape so every existing reader keeps working:
       //   programs: [<the client's single program>]
-      const { data: bundle, error: bundleError } = await supabase.rpc(
+      const { data: bundleData, error: bundleError } = await supabaseLoose.rpc(
         "get_client_program_bundle",
       );
+      const bundle = bundleData as
+        | {
+            program?: unknown;
+            workouts?: unknown;
+            exercises?: unknown;
+            weight_units?: unknown;
+          }
+        | null;
       if (!bundleError && bundle && bundle.program) {
         cache = {
           programs: [bundle.program],
@@ -68,7 +77,7 @@ export async function hydrateCloudCache(): Promise<boolean> {
 
       // Coach (or any account without a bundle): read the library row. RLS
       // returns an empty result for non-coaches, so no error path.
-      const { data, error } = await supabase
+      const { data, error } = await supabaseLoose
         .from("app_state")
         .select("programs, exercises, workouts, weight_units")
         .eq("id", "global")
@@ -106,8 +115,8 @@ export async function persistCloudAppStateField(
 ): Promise<void> {
   try {
     const value = field === "weight_units" ? cache.weightUnits : cache[field];
-    const payload = { [field]: value } as never;
-    const { error } = await supabase.from("app_state").update(payload).eq("id", "global");
+    const payload = { [field]: value };
+    const { error } = await supabaseLoose.from("app_state").update(payload).eq("id", "global");
     if (error) console.error("Cloud app state persist failed", error);
   } catch (error) {
     console.error("Cloud app state persist threw", error);
