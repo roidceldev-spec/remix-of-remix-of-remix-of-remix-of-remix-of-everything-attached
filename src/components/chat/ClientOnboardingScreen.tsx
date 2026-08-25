@@ -4,6 +4,7 @@ import { Clock } from "lucide-react";
 import type { AppAccount } from "@/lib/cloud-accounts";
 import { fetchAccount } from "@/lib/cloud-accounts";
 import { appendOnboardingGreeting } from "@/lib/chat";
+import { hydrateCloudCache, invalidateCloudCache } from "@/lib/cloud-cache";
 import { LOCAL_CHAT_CHANGED_EVENT, emitLocalEvent } from "@/lib/local-events";
 import { ChatConversation } from "./ChatConversation";
 import { useChat } from "./ChatProvider";
@@ -42,6 +43,10 @@ export function ClientOnboardingScreen({ account }: { account: AppAccount }) {
       try {
         const current = await fetchAccount(account.id);
         if (!cancelled && current?.approvedAt) {
+          // Pick up the coach-published program snapshot before entering the
+          // app so the dashboard renders the client's program immediately.
+          invalidateCloudCache();
+          await hydrateCloudCache().catch(() => undefined);
           void navigate({ to: "/client/dashboard", replace: true });
         }
       } catch {
