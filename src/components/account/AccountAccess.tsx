@@ -271,14 +271,7 @@ export function AccountAccess() {
           </div>
         )}
 
-        <Button
-          type="button"
-          onClick={() => setCodeModalOpen(true)}
-          className="min-h-12 w-full rounded-xl text-[1rem] font-semibold"
-        >
-          <KeyRound className="mr-2 h-5 w-5" aria-hidden="true" />
-          Create account
-        </Button>
+        <GoogleSignInButton />
 
         <div className="flex items-center gap-3" aria-hidden="true">
           <span className="h-px flex-1 bg-border" />
@@ -286,7 +279,15 @@ export function AccountAccess() {
           <span className="h-px flex-1 bg-border" />
         </div>
 
-        <GoogleSignInButton />
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setCodeModalOpen(true)}
+          className="min-h-12 w-full rounded-xl text-[1rem] font-semibold border-border hover:bg-muted/40"
+        >
+          <KeyRound className="mr-2 h-5 w-5" aria-hidden="true" />
+          Create account
+        </Button>
 
         <p className="text-center text-[0.875rem] leading-5 text-muted-foreground">
           Already have an account? Sign in with the same Google account you used

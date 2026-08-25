@@ -35,6 +35,9 @@ function WelcomePage() {
         >
           Continue
         </Link>
+        <p className="mt-4 text-[0.8125rem] font-medium uppercase tracking-[0.18em] text-white/45">
+          Exclusive access only
+        </p>
       </div>
     </main>
   );
